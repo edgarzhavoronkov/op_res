@@ -1,11 +1,21 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <string>
 
 
 bool phi_is_null(std :: vector<std :: vector<double> >& table) {
 	for (int i = 0; i < table[0].size(); ++i) {
 		if (table[table.size() - 1][i] != 0){
+			return false;
+		}
+	}
+	return true;
+}
+
+bool all_constants_are_not_negative(std :: vector<std :: vector<double> >& table) {
+	for (int i = 0; i < table.size() - 2; ++i) {
+		if (table[i][0] < 0) {
 			return false;
 		}
 	}
@@ -33,117 +43,71 @@ void recalc_table(std :: vector<std :: vector<double> >& table, double solving_e
 	}
 }
 
-std :: vector<int>& gen_plan(std :: vector<std :: vector<double> >& table, int rows, int columns, int n, int m){
-	for (int i = 0; i < rows - 2; ++i) {
-		if (table[i][0] < 0) {
-			
-			for (int j = 0; j < columns; ++j) {
-				table[rows - 1][j] += table[i][j]; 
-			}
+double get_solving_element(std :: vector<std :: vector<double> >& table, int n, int m, int& s, int& r, std :: string mode) {
+	int offset;
+	int rows = table.size();
+	int columns = table[0].size();
 
-			//recalc by phi string
-			while (!phi_is_null(table)) {
-				
-				std::vector<double> theta;
-				theta.assign(m, 0);
+	if (mode == "phi") {
+		offset = 1;
+	} else if (mode == "zet") {
+		offset = 2;
+	}
 
-				double min = 1e9;
-				int r = 1;
+	std::vector<double> theta;
+	theta.assign(m, 0);
 
-				for (int i = 1; i <= n; ++i){
-					if (table[rows - 1][i] < min) {
-						min = table[rows - 1][i];
-						r = i;
-					}
-				}
+	double min = 1e9;
+	r = 0;
 
-				for (int i = 0; i < m; ++i) {
-					theta[i] = table[i][0] / table[i][r];
-				}
-
-				min = 1e9;
-				int s = 1;
-
-				for (int i = 0; i < m; ++i) {
-					if (theta[i] > 0 && theta[i] < min) {
-						min = theta[i];
-						s = i;
-					}
-				}
-				std :: cout << s << " " << r;
-				double solving_element = table[s][r];
-				recalc_table(table, solving_element, s, r);
-			}
-
-			//recalc by target function string
-			std::vector<double> theta;
-			theta.assign(m, 0);
-
-			double min = 1e9;
-			int r = 1;
-
-			for (int i = 1; i <= n; ++i){
-				if (table[rows - 2][i] < min) {
-					min = table[rows - 2][i];
-					r = i;
-				}
-			}
-
-			for (int i = 0; i < m; ++i) {
-				theta[i] = table[i][0] / table[i][r];
-			}
-
-			min = 1e9;
-			int s = 1;
-
-			for (int i = 0; i < m; ++i) {
-				if (theta[i] > 0 && theta[i] < min) {
-					min = theta[i];
-					s = i;
-				}
-			}
-
-			double solving_element = table[s][r];
-			recalc_table(table, solving_element, s, r);
-
-		} else {
-
-			for (int i = 1; i <= n; ++i) {
-				if (table[rows - 2][i] < 0) {
-
-					std::vector<double> theta;
-					theta.assign(m, 0);
-
-					double min = 1e9;
-					int r = 1;
-
-					for (int i = 1; i <= n; ++i){
-						if (table[rows - 2][i] < min) {
-							min = table[rows - 2][i];
-							r = i;
-						}
-					}
-
-					for (int i = 0; i < m; ++i) {
-						theta[i] = table[i][0] / table[i][r];
-					}
-
-					min = 1e9;
-					int s = 1;
-
-					for (int i = 0; i < m; ++i) {
-						if (theta[i] > 0 && theta[i] < min) {
-							min = theta[i];
-							s = i;
-						}
-					}
-					double solving_element = table[s][r];
-					recalc_table(table, solving_element, s, r);					
-				}
-			}
-
+	for (int i = 1; i <= n; ++i){
+		if (table[rows - offset][i] < min) {
+			min = table[rows - offset][i];
+			r = i;
 		}
 	}
+
+	for (int i = 0; i < m; ++i) {
+		theta[i] = table[i][0] / table[i][r];
+	}
+
+	min = 1e9;
+	s = 0;
+
+	for (int i = 0; i < m; ++i) {
+		if (theta[i] > 0 && theta[i] < min) {
+			min = theta[i];
+			s = i;
+		}
+	}
+
+	return table[s][r];
+}
+
+std :: vector<int>& gen_plan(std :: vector<std :: vector<double> >& table, int rows, int columns, int n, int m){
+	if (!all_constants_are_not_negative(table)) {
+		for (int i = 0; i < rows - 2; ++i) {
+			if (table[i][0] < 0) {
+				for (int j = 0; j < columns; ++j) {
+					table[rows - 1][j] += table[i][j]; 
+				}
+			}
+		}
+		//recalc by phi string
+		while (!phi_is_null(table)) {
+			int s,r;
+			double solving_element = get_solving_element(table, n, m, s,r,"phi");
+			recalc_table(table, solving_element, s, r);
+		}
+		//recalc by target function string
+		int s,r;
+		double solving_element = get_solving_element(table, n, m, s,r,"zet");
+		recalc_table(table, solving_element, s, r);
+	} else {
+		int s,r;
+		double solving_element = get_solving_element(table, n, m, s,r,"zet");
+		recalc_table(table, solving_element, s, r);
+	}	
 }
 
 
@@ -173,7 +137,7 @@ int main(int argc, char** argv) {
     phi.assign(m, 0);
     table.push_back(phi);
 
-    gen_plan(table, table.size(), table[0].size(), 3, 3);
+    gen_plan(table, table.size(), table[0].size(), b_var, s_var);
 
 	for (int i = 0; i < table.size(); ++i) {
     	for (int j = 0; j < table[i].size(); ++j) {
