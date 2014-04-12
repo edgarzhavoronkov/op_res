@@ -113,40 +113,37 @@ std :: vector<int>& gen_plan(std :: vector<std :: vector<double> >& table, int r
 
 int main(int argc, char** argv) {
 	const char* input_file = argv[1];
-    const char* output_file = argv[2];
+	const char* output_file = argv[2];
 
 	std :: ifstream ifs(input_file, std :: ifstream :: in);
-    std :: ofstream ofs(output_file, std :: ifstream :: out); 
-    
-    std :: vector<std :: vector<double> > table;
+	std :: ofstream ofs(output_file, std :: ifstream :: out); 
+	
+	std :: vector<std :: vector<double> > table;
 
-    int n, m, b_var, s_var;
-    ifs >> n >> m >> b_var >> s_var;
+	int n, m, b_var, s_var;
+	ifs >> n >> m >> b_var >> s_var;
 
-    for (int i = 0; i < n; ++i) {
-    	std :: vector <double> tmp;
-    	for (int j = 0; j < m; ++j) {
-    		double val;
-    		ifs >> val;
-    		tmp.push_back(val);
-    	}
-    	table.push_back(tmp);
-    }
+	for (int i = 0; i < n; ++i) {
+		std :: vector <double> tmp;
+		for (int j = 0; j < m; ++j) {
+			double val;
+			ifs >> val;
+			tmp.push_back(val);
+		}
+		table.push_back(tmp);
+	}
 
-    std :: vector<double> phi;
-    phi.assign(m, 0);
-    table.push_back(phi);
+	std :: vector<double> phi;
+	phi.assign(m, 0);
+	table.push_back(phi);
 
-    gen_plan(table, table.size(), table[0].size(), b_var, s_var);
+	gen_plan(table, table.size(), table[0].size(), b_var, s_var);
 
 	for (int i = 0; i < table.size(); ++i) {
-    	for (int j = 0; j < table[i].size(); ++j) {
-    		ofs << table[i][j] << " ";
-    	}
-    	ofs << std :: endl;
-    }    
-
-
-
+		for (int j = 0; j < table[i].size(); ++j) {
+			ofs << table[i][j] << " ";
+		}
+		ofs << std :: endl;
+	}    
 	return 0;
 }
